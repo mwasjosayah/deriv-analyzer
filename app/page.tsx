@@ -24,17 +24,9 @@ export default function Home() {
 
   const [ticksAnalyzed, setTicksAnalyzed] = useState(0);
 
-  /*
-   * Rolling collection of ticks currently
-   * being used for the analysis.
-   */
   const tickBuffer = useRef<number[]>([]);
 
   useEffect(() => {
-    /*
-     * Clear the old sample whenever the
-     * selected tick size changes.
-     */
     tickBuffer.current = [];
 
     setDigitPercentages(Array(10).fill(0));
@@ -73,16 +65,9 @@ export default function Home() {
           const prices =
             data.history.prices.map(Number);
 
-          /*
-           * Store the selected number of
-           * historical ticks.
-           */
           tickBuffer.current =
             prices.slice(-tickLimit);
 
-          /*
-           * Calculate distribution.
-           */
           updateDigitDistribution(
             tickBuffer.current
           );
@@ -91,9 +76,6 @@ export default function Home() {
             tickBuffer.current.length
           );
 
-          /*
-           * Latest historical digit.
-           */
           if (tickBuffer.current.length > 0) {
             const latestPrice =
               tickBuffer.current[
@@ -122,16 +104,19 @@ export default function Home() {
           const newDigit =
             getLastDigit(quote);
 
+          /*
+           * Move the red pointer to
+           * the new current digit.
+           */
           setLastDigit(newDigit);
 
           /*
-           * Add the new tick to the rolling
-           * analysis sample.
+           * Add new tick.
            */
           tickBuffer.current.push(quote);
 
           /*
-           * Keep ONLY the selected number
+           * Keep only selected number
            * of ticks.
            */
           if (
@@ -142,8 +127,7 @@ export default function Home() {
           }
 
           /*
-           * Recalculate percentages using
-           * the updated rolling sample.
+           * Recalculate distribution.
            */
           updateDigitDistribution(
             tickBuffer.current
@@ -212,17 +196,13 @@ export default function Home() {
   function updateDigitDistribution(
     prices: number[]
   ) {
-
     if (!prices.length) return;
 
     const counts = Array(10).fill(0);
 
     prices.forEach((price) => {
-
       const digit =
-        getLastDigit(
-          Number(price)
-        );
+        getLastDigit(Number(price));
 
       if (
         digit >= 0 &&
@@ -230,7 +210,6 @@ export default function Home() {
       ) {
         counts[digit]++;
       }
-
     });
 
     const total =
@@ -292,14 +271,11 @@ export default function Home() {
                 : ""
             }
             onClick={() =>
-              setMarket(
-                "over-under"
-              )
+              setMarket("over-under")
             }
           >
             OVER / UNDER
           </button>
-
 
           <button
             className={
@@ -308,19 +284,15 @@ export default function Home() {
                 : ""
             }
             onClick={() =>
-              setMarket(
-                "even-odd"
-              )
+              setMarket("even-odd")
             }
           >
             EVEN / ODD
           </button>
 
-
           <button
             className={
-              market ===
-              "differs-matches"
+              market === "differs-matches"
                 ? "active"
                 : ""
             }
@@ -351,12 +323,10 @@ export default function Home() {
             </h2>
 
             <p>
-              Live distribution of the
-              last digits
+              Live distribution of the last digits
             </p>
 
           </div>
-
 
           <span className="live-indicator">
 
@@ -390,9 +360,7 @@ export default function Home() {
                       : ""
                   }
                   onClick={() =>
-                    setTickLimit(
-                      option
-                    )
+                    setTickLimit(option)
                   }
                 >
                   {option.toLocaleString()}
@@ -416,7 +384,7 @@ export default function Home() {
         </div>
 
 
-        {/* TICK COUNT */}
+        {/* TICK SUMMARY */}
 
         <div className="tick-summary">
 
@@ -443,9 +411,23 @@ export default function Home() {
             (digit) => (
 
               <div
-                className="digit-item"
+                className={
+                  `digit-item ${
+                    lastDigit === digit
+                      ? "current-digit"
+                      : ""
+                  }`
+                }
                 key={digit}
               >
+
+                {/* RED TRIANGLE POINTER */}
+
+                {lastDigit === digit && (
+                  <div className="tick-pointer">
+                    <span></span>
+                  </div>
+                )}
 
                 <div className="digit-circle">
 
@@ -455,10 +437,7 @@ export default function Home() {
 
                   <span className="digit-percent">
 
-                    {digitPercentages[
-                      digit
-                    ].toFixed(1)}
-                    %
+                    {digitPercentages[digit].toFixed(1)}%
 
                   </span>
 
@@ -468,6 +447,21 @@ export default function Home() {
 
             )
           )}
+
+        </div>
+
+
+        {/* CURRENT TICK */}
+
+        <div className="current-tick">
+
+          Current Tick:{" "}
+
+          <strong>
+            {lastDigit === null
+              ? "--"
+              : lastDigit}
+          </strong>
 
         </div>
 
