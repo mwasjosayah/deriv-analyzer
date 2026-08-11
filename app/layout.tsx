@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Deriv Analyzer",
-  description: "Deriv market analysis and prediction tool",
+  title: "Deriv Analyzer by Mwas Josayah",
+  description: "Smart Deriv market analysis and prediction tool",
 };
 
 export default function RootLayout({
