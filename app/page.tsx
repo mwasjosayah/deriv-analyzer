@@ -2,105 +2,99 @@
 
 import { useState } from "react";
 
-type MarketType = "over-under" | "even-odd" | "differs-matches" | null;
+const digits = Array.from({ length: 10 }, (_, i) => i);
 
 export default function Home() {
-  const [marketType, setMarketType] = useState<MarketType>(null);
-  const [contract, setContract] = useState<string | null>(null);
-
-  const selectMarket = (type: MarketType) => {
-    setMarketType(type);
-    setContract(null);
-  };
+  const [market, setMarket] = useState("");
 
   return (
     <main className="dashboard">
-      <header>
+      <header className="hero">
         <h1>Deriv Analyzer</h1>
-        <p>by Mwas Josayah</p>
-        <span>Smart Market Analysis</span>
+        <p className="author">by Mwas Josayah</p>
+        <p className="subtitle">Smart Market Analysis</p>
       </header>
 
-      <section className="market">
+      <section className="card market-card">
         <h2>Market Type</h2>
 
-        <button onClick={() => selectMarket("over-under")}>
-          OVER / UNDER
-        </button>
+        <div className="market-buttons">
+          <button
+            className={market === "over-under" ? "active" : ""}
+            onClick={() => setMarket("over-under")}
+          >
+            OVER / UNDER
+          </button>
 
-        <button onClick={() => selectMarket("even-odd")}>
-          EVEN / ODD
-        </button>
+          <button
+            className={market === "even-odd" ? "active" : ""}
+            onClick={() => setMarket("even-odd")}
+          >
+            EVEN / ODD
+          </button>
 
-        <button onClick={() => selectMarket("differs-matches")}>
-          DIFFERS / MATCHES
-        </button>
+          <button
+            className={market === "differs-matches" ? "active" : ""}
+            onClick={() => setMarket("differs-matches")}
+          >
+            DIFFERS / MATCHES
+          </button>
+        </div>
+      </section>
 
-        {marketType === "over-under" && (
-          <div className="contract-options">
-            <h3>Select Contract</h3>
-
-            <button onClick={() => setContract("Over 2")}>
-              Over 2
-            </button>
-
-            <button onClick={() => setContract("Under 7")}>
-              Under 7
-            </button>
+      <section className="card digit-card">
+        <div className="section-heading">
+          <div>
+            <h2>Digit Distribution</h2>
+            <p>Live distribution of the last digits</p>
           </div>
-        )}
 
-        {marketType === "even-odd" && (
-          <div className="contract-options">
-            <h3>Select Contract</h3>
+          <span className="live-status">
+            <span className="live-dot"></span>
+            LIVE
+          </span>
+        </div>
 
-            <button onClick={() => setContract("Even")}>
-              Even
-            </button>
+        <div className="digit-grid">
+          {digits.map((digit) => (
+            <div className="digit-item" key={digit}>
+              <div className="digit-circle">
+                <span className="digit-number">{digit}</span>
+                <span className="digit-percent">--%</span>
+              </div>
+            </div>
+          ))}
+        </div>
 
-            <button onClick={() => setContract("Odd")}>
-              Odd
-            </button>
-          </div>
-        )}
-
-        {marketType === "differs-matches" && (
-          <div className="contract-options">
-            <h3>Select Contract</h3>
-
-            <button onClick={() => setContract("Differs")}>
-              Differs
-            </button>
-
-            <button onClick={() => setContract("Matches")}>
-              Matches
-            </button>
-          </div>
-        )}
+        <div className="distribution-info">
+          <span>Expected distribution</span>
+          <strong>10% per digit</strong>
+        </div>
       </section>
 
       <section className="card">
         <h2>Analysis</h2>
 
-        {contract ? (
-          <>
-            <p>
-              Selected Market: <strong>{contract}</strong>
-            </p>
-
-            <p>Waiting for live market data...</p>
-          </>
+        {market ? (
+          <p>
+            {market === "over-under" && "Over / Under market selected."}
+            {market === "even-odd" && "Even / Odd market selected."}
+            {market === "differs-matches" &&
+              "Differs / Matches market selected."}
+          </p>
         ) : (
           <p>Select a market and contract to begin analysis.</p>
         )}
       </section>
 
-      <section className="card">
+      <section className="card prediction-card">
         <h2>Prediction</h2>
 
-        <strong>--</strong>
+        <div className="prediction-value">--</div>
 
-        <p>Confidence: --%</p>
+        <p>
+          Confidence: <strong>--%</strong>
+        </p>
       </section>
     </main>
   );
