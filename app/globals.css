@@ -19,12 +19,9 @@ button {
   font: inherit;
 }
 
-/* =========================
-   MAIN DASHBOARD
-========================= */
-
 .dashboard {
-  width: min(100% - 24px, 900px);
+  width: calc(100% - 24px);
+  max-width: 900px;
   margin: 0 auto;
   padding: 32px 0 80px;
 }
@@ -89,16 +86,12 @@ button {
 .market-buttons button {
   width: 100%;
   min-height: 64px;
-
   border: 1px solid #31567d;
   border-radius: 18px;
-
   background: #172941;
   color: #f4f7fb;
-
   font-size: 1.05rem;
   font-weight: 700;
-
   cursor: pointer;
 
   transition:
@@ -121,9 +114,7 @@ button {
   background: #168ee5;
   border-color: #55c1ff;
   color: white;
-
-  box-shadow:
-    0 0 20px rgba(22, 142, 229, 0.25);
+  box-shadow: 0 0 20px rgba(22, 142, 229, 0.25);
 }
 
 /* =========================
@@ -139,7 +130,6 @@ button {
   align-items: flex-start;
   justify-content: space-between;
   gap: 20px;
-
   margin-bottom: 25px;
 }
 
@@ -162,11 +152,9 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-
   color: #4ade80;
   font-size: 0.95rem;
   font-weight: 800;
-
   flex-shrink: 0;
 
   animation: liveFade 1.8s ease-in-out infinite;
@@ -175,9 +163,7 @@ button {
 .live-dot {
   width: 12px;
   height: 12px;
-
   border-radius: 50%;
-
   background: #4ade80;
 
   box-shadow:
@@ -205,4 +191,496 @@ button {
   0% {
     transform: scale(0.75);
     opacity: 0.4;
- 
+  }
+
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(0.75);
+    opacity: 0.4;
+  }
+}
+
+/* =========================
+   TICK ANALYSIS
+========================= */
+
+.tick-summary {
+  background: #13243a;
+  border: 1px solid #294361;
+  border-radius: 22px;
+  padding: 20px;
+  margin-bottom: 28px;
+  text-align: center;
+}
+
+.tick-label {
+  color: #9eabc0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.tick-buttons {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.tick-button {
+  border: 1px solid #31567d;
+  background: #172941;
+  color: #f4f7fb;
+  border-radius: 9px;
+  padding: 8px 13px;
+  cursor: pointer;
+  font-weight: 700;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.tick-button:hover {
+  background: #1d3855;
+  border-color: #42b5ff;
+}
+
+.tick-button:active {
+  transform: scale(0.96);
+}
+
+.tick-button.active {
+  background: #168ee5;
+  border-color: #55c1ff;
+  color: #ffffff;
+}
+
+.tick-using {
+  color: #aeb9c9;
+  font-size: 0.95rem;
+  margin-top: 8px;
+}
+
+.tick-using strong {
+  color: #42b5ff;
+}
+
+.tick-number {
+  margin: 12px 0 6px;
+  color: #42b5ff;
+  font-size: 3.5rem;
+  line-height: 1;
+  font-weight: 800;
+}
+
+/* =========================
+   DIGIT GRID
+========================= */
+
+.digit-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 34px 12px;
+  padding: 30px 0 35px;
+}
+
+.digit-item {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: visible;
+  min-height: 72px;
+}
+
+/* =========================
+   DIGIT CIRCLES
+========================= */
+
+.digit-circle {
+  position: relative;
+
+  width: 72px;
+  height: 72px;
+
+  border-radius: 50%;
+  border: 3px solid #64748b;
+
+  background: #13243a;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow:
+    0 0 15px rgba(100, 150, 200, 0.1),
+    inset 0 0 15px rgba(100, 150, 200, 0.05);
+
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.digit-circle:hover {
+  transform: translateY(-4px);
+}
+
+.digit-number {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.digit-percent {
+  margin-top: 5px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+/* =========================
+   RANKING COLORS
+========================= */
+
+/* 1st HIGHEST = GREEN */
+
+.digit-circle.rank-highest {
+  border-color: #22c55e;
+
+  box-shadow:
+    0 0 20px rgba(34, 197, 94, 0.35),
+    inset 0 0 15px rgba(34, 197, 94, 0.08);
+}
+
+.digit-circle.rank-highest .digit-percent {
+  color: #22c55e;
+}
+
+/* 2nd HIGHEST = BLUE */
+
+.digit-circle.rank-second-highest {
+  border-color: #3b82f6;
+
+  box-shadow:
+    0 0 20px rgba(59, 130, 246, 0.35),
+    inset 0 0 15px rgba(59, 130, 246, 0.08);
+}
+
+.digit-circle.rank-second-highest .digit-percent {
+  color: #3b82f6;
+}
+
+/* 3rd HIGHEST = PINK */
+
+.digit-circle.rank-third-highest {
+  border-color: #ec4899;
+
+  box-shadow:
+    0 0 20px rgba(236, 72, 153, 0.35),
+    inset 0 0 15px rgba(236, 72, 153, 0.08);
+}
+
+.digit-circle.rank-third-highest .digit-percent {
+  color: #ec4899;
+}
+
+/* 1st LOWEST = RED */
+
+.digit-circle.rank-lowest {
+  border-color: #ef4444;
+
+  box-shadow:
+    0 0 20px rgba(239, 68, 68, 0.35),
+    inset 0 0 15px rgba(239, 68, 68, 0.08);
+}
+
+.digit-circle.rank-lowest .digit-percent {
+  color: #ef4444;
+}
+
+/* 2nd LOWEST = YELLOW */
+
+.digit-circle.rank-second-lowest {
+  border-color: #facc15;
+
+  box-shadow:
+    0 0 20px rgba(250, 204, 21, 0.35),
+    inset 0 0 15px rgba(250, 204, 21, 0.08);
+}
+
+.digit-circle.rank-second-lowest .digit-percent {
+  color: #facc15;
+}
+
+/* 3rd LOWEST = BROWN */
+
+.digit-circle.rank-third-lowest {
+  border-color: #a16207;
+
+  box-shadow:
+    0 0 20px rgba(161, 98, 7, 0.35),
+    inset 0 0 15px rgba(161, 98, 7, 0.08);
+}
+
+.digit-circle.rank-third-lowest .digit-percent {
+  color: #d6a84f;
+}
+
+/* REMAINING DIGITS */
+
+.digit-circle.rank-normal {
+  border-color: #64748b;
+
+  box-shadow:
+    0 0 12px rgba(100, 116, 139, 0.15);
+}
+
+.digit-circle.rank-normal .digit-percent {
+  color: #94a3b8;
+}
+
+/* =========================
+   RED CURRENT TICK POINTER
+========================= */
+
+.tick-pointer {
+  position: absolute;
+
+  top: -23px;
+  left: 50%;
+
+  width: 0;
+  height: 0;
+
+  /*
+   * Triangle points DOWN
+   * toward the D circle
+   */
+
+  border-left: 11px solid transparent;
+  border-right: 11px solid transparent;
+  border-top: 18px solid #ff3030;
+
+  transform: translateX(-50%);
+
+  filter:
+    drop-shadow(0 0 5px rgba(255, 48, 48, 0.9))
+    drop-shadow(0 0 10px rgba(255, 48, 48, 0.5));
+
+  z-index: 20;
+
+  animation: pointerPulse 0.8s ease-in-out infinite;
+}
+
+@keyframes pointerPulse {
+  0% {
+    transform:
+      translateX(-50%)
+      translateY(0);
+  }
+
+  50% {
+    transform:
+      translateX(-50%)
+      translateY(-3px);
+  }
+
+  100% {
+    transform:
+      translateX(-50%)
+      translateY(0);
+  }
+}
+
+/* =========================
+   DISTRIBUTION INFO
+========================= */
+
+.distribution-info {
+  border-top: 1px solid #24364d;
+  padding-top: 20px;
+
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+
+  color: #9eabc0;
+}
+
+.distribution-info strong {
+  color: #42b5ff;
+}
+
+/* =========================
+   GENERAL CARD TEXT
+========================= */
+
+.card p {
+  color: #aeb9c9;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+/* =========================
+   PREDICTION
+========================= */
+
+.prediction-value {
+  display: block;
+  font-size: 4rem;
+  font-weight: 800;
+  color: #42b5ff;
+  margin: 10px 0;
+}
+
+.prediction-card strong {
+  color: #42b5ff;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 600px) {
+
+  .dashboard {
+    width: calc(100% - 24px);
+    padding-top: 32px;
+  }
+
+  .card {
+    padding: 24px 18px;
+    border-radius: 24px;
+  }
+
+  .card h2 {
+    font-size: 1.8rem;
+  }
+
+  .section-heading {
+    align-items: flex-start;
+  }
+
+  .live-indicator {
+    flex-shrink: 0;
+    margin-top: 5px;
+  }
+
+  .tick-summary {
+    margin-top: 8px;
+  }
+
+  .tick-buttons {
+    gap: 6px;
+  }
+
+  .tick-button {
+    padding: 7px 10px;
+    font-size: 0.8rem;
+  }
+
+  .tick-number {
+    font-size: 3rem;
+  }
+
+  .digit-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 34px 8px;
+    padding-top: 32px;
+  }
+
+  .digit-circle {
+    width: 62px;
+    height: 62px;
+    border-width: 2px;
+  }
+
+  .digit-number {
+    font-size: 1.3rem;
+  }
+
+  .digit-percent {
+    font-size: 0.62rem;
+    margin-top: 3px;
+  }
+
+  .tick-pointer {
+    top: -20px;
+
+    border-left-width: 8px;
+    border-right-width: 8px;
+    border-top-width: 15px;
+  }
+
+  .distribution-info {
+    flex-direction: column;
+  }
+
+  .prediction-value {
+    font-size: 3.5rem;
+  }
+}
+
+/* =========================
+   SMALL PHONES
+========================= */
+
+@media (max-width: 380px) {
+
+  .dashboard {
+    width: calc(100% - 16px);
+  }
+
+  .card {
+    padding: 20px 14px;
+  }
+
+  .digit-grid {
+    gap: 30px 4px;
+  }
+
+  .digit-circle {
+    width: 54px;
+    height: 54px;
+  }
+
+  .digit-number {
+    font-size: 1.15rem;
+  }
+
+  .digit-percent {
+    font-size: 0.55rem;
+  }
+
+  .live-indicator {
+    font-size: 0.8rem;
+  }
+
+  .live-dot {
+    width: 9px;
+    height: 9px;
+  }
+
+  .tick-button {
+    padding: 6px 8px;
+    font-size: 0.72rem;
+  }
+
+  .tick-pointer {
+    top: -18px;
+
+    border-left-width: 7px;
+    border-right-width: 7px;
+    border-top-width: 13px;
+  }
+}
