@@ -48,7 +48,7 @@ export default function Home() {
 
   /*
    * =========================
-   * UPDATE DISTRIBUTION
+   * CALCULATE DISTRIBUTION
    * =========================
    */
 
@@ -69,11 +69,10 @@ export default function Home() {
 
     const total = prices.length;
 
-    const percentages = counts.map(
-      (count) =>
-        Number(
-          ((count / total) * 100).toFixed(1)
-        )
+    const percentages = counts.map((count) =>
+      Number(
+        ((count / total) * 100).toFixed(1)
+      )
     );
 
     setDigitPercentages(percentages);
@@ -94,10 +93,13 @@ export default function Home() {
         digit: index,
         percentage,
       }))
-      .sort(
-        (a, b) =>
-          b.percentage - a.percentage
-      );
+      .sort((a, b) => {
+        if (b.percentage !== a.percentage) {
+          return b.percentage - a.percentage;
+        }
+
+        return a.digit - b.digit;
+      });
 
     const highest = ranked[0]?.digit;
     const secondHighest = ranked[1]?.digit;
@@ -222,16 +224,14 @@ export default function Home() {
           /*
            * Add new tick
            */
-
           currentPrices = [
             ...currentPrices,
             quote,
           ];
 
           /*
-           * Keep only selected sample
+           * Keep selected sample size
            */
-
           if (
             currentPrices.length >
             tickLimit
@@ -245,15 +245,13 @@ export default function Home() {
           /*
            * Recalculate percentages
            */
-
           updateDigitDistribution(
             currentPrices
           );
 
           /*
-           * Update current digit
+           * Move red pointer
            */
-
           setLastDigit(
             getLastDigit(quote)
           );
@@ -408,9 +406,6 @@ export default function Home() {
             Analysis Sample
           </div>
 
-
-          {/* TICK OPTIONS */}
-
           <div className="tick-buttons">
 
             {TICK_OPTIONS.map(
@@ -435,7 +430,6 @@ export default function Home() {
 
           </div>
 
-
           <div className="tick-using">
 
             Using{" "}
@@ -448,11 +442,9 @@ export default function Home() {
 
           </div>
 
-
           <div className="tick-number">
             {ticksAnalyzed.toLocaleString()}
           </div>
-
 
           <div className="tick-label">
             TICKS ANALYZED
@@ -475,20 +467,18 @@ export default function Home() {
               {/* RED CURRENT TICK POINTER */}
 
               {lastDigit === digit && (
-                <div className="tick-pointer">
-                  <span></span>
-                </div>
+                <div
+                  className="tick-pointer"
+                  aria-label={`Current tick is digit ${digit}`}
+                />
               )}
 
-
-              {/* DIGIT CIRCLE */}
+              {/* D CIRCLE */}
 
               <div
-                className={
-                  `digit-circle ${getDigitRankClass(
-                    digit
-                  )}`
-                }
+                className={`digit-circle ${getDigitRankClass(
+                  digit
+                )}`}
               >
 
                 <span className="digit-number">
