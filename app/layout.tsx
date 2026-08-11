@@ -1,9 +1,14 @@
-import type { Metadata } from "next";
-import "./globals.css";
+import type { Metadata, Viewport } from "next";
 
 export const metadata: Metadata = {
-  title: "Deriv Analyzer by Mwas Josayah",
-  description: "Smart Deriv market analysis and prediction tool",
+  title: "Deriv Analyzer",
+  description: "Deriv market analysis and prediction tool",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
