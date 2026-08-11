@@ -1,24 +1,146 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const digits = Array.from({ length: 10 }, (_, i) => i);
 
+// Starting market.
+// We can make this selectable later.
+const SYMBOL = "1HZ100V";
+
 export default function Home() {
   const [market, setMarket] = useState("");
+  const [digitPercentages, setDigitPercentages] = useState<number[]>(
+    Array(10).fill(0)
+  );
+
+  const [lastDigit, setLastDigit] = useState<number | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState("CONNECTING");
+
+  useEffect(() => {
+    const ws = new WebSocket(
+      "wss://api.derivws.com/trading/v1/options/ws/public"
+    );
+
+    ws.onopen = () => {
+      setConnectionStatus("LIVE");
+
+      ws.send(
+        JSON.stringify({
+          ticks_history: SYMBOL,
+          count: 100,
+          end: "latest",
+          style: "ticks",
+          subscribe: 1,
+        })
+      );
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+
+        /*
+         * Historical tick data
+         */
+        if (data.msg_type === "history" && data.history?.prices) {
+          const prices = data.history.prices;
+
+          updateDigitDistribution(prices);
+        }
+
+        /*
+         * Live tick
+         */
+        if (data.msg_type === "tick" && data.tick?.quote !== undefined) {
+          const quote = data.tick.quote;
+
+          updateDigitDistribution([quote]);
+
+          const digit = getLastDigit(quote);
+
+          setLastDigit(digit);
+        }
+      } catch (error) {
+        console.error("Data error:", error);
+      }
+    };
+
+    ws.onerror = () => {
+      setConnectionStatus("ERROR");
+    };
+
+    ws.onclose = () => {
+      setConnectionStatus("DISCONNECTED");
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, []);
+
+  /*
+   * Extract the final digit from a Deriv quote.
+   */
+  function getLastDigit(price: number): number {
+    const priceString = price.toString();
+
+    const decimalPart = priceString.split(".")[1] || "";
+
+    if (decimalPart.length === 0) {
+      return price % 10;
+    }
+
+    return Number(decimalPart[decimalPart.length - 1]);
+  }
+
+  /*
+   * Calculate digit distribution.
+   */
+  function updateDigitDistribution(prices: number[]) {
+    if (!prices.length) return;
+
+    const counts = Array(10).fill(0);
+
+    prices.forEach((price) => {
+      const digit = getLastDigit(Number(price));
+
+      if (digit >= 0 && digit <= 9) {
+        counts[digit]++;
+      }
+    });
+
+    const total = prices.length;
+
+    const percentages = counts.map((count) =>
+      Number(((count / total) * 100).toFixed(1))
+    );
+
+    setDigitPercentages(percentages);
+  }
 
   return (
     <main className="dashboard">
 
       {/* HEADER */}
+
       <header className="hero">
         <h1>Deriv Analyzer</h1>
-        <p className="author">by Mwas Josayah</p>
-        <p className="subtitle">Smart Market Analysis</p>
+
+        <p className="author">
+          by Mwas Josayah
+        </p>
+
+        <p className="subtitle">
+          Smart Market Analysis
+        </p>
       </header>
 
+
       {/* MARKET TYPE */}
+
       <section className="card market-card">
+
         <h2>Market Type</h2>
 
         <div className="market-buttons">
@@ -45,70 +167,139 @@ export default function Home() {
           </button>
 
         </div>
+
       </section>
 
+
       {/* DIGIT DISTRIBUTION */}
+
       <section className="card digit-card">
 
         <div className="section-heading">
 
           <div>
             <h2>Digit Distribution</h2>
-            <p>Live distribution of the last digits</p>
+
+            <p>
+              Live distribution of the last digits
+            </p>
           </div>
 
-          {/* LIVE INDICATOR */}
+
+          {/* LIVE */}
+
           <span className="live-indicator">
+
             <span className="live-dot"></span>
-            LIVE
+
+            {connectionStatus}
+
           </span>
 
         </div>
 
+
         {/* DIGIT CIRCLES */}
+
         <div className="digit-grid">
 
           {digits.map((digit) => (
-            <div className="digit-item" key={digit}>
+
+            <div
+              className="digit-item"
+              key={digit}
+            >
 
               <div className="digit-circle">
-                <span className="digit-number">{digit}</span>
-                <span className="digit-percent">--%</span>
+
+                <span className="digit-number">
+                  {digit}
+                </span>
+
+                <span className="digit-percent">
+                  {digitPercentages[digit].toFixed(1)}%
+                </span>
+
               </div>
 
             </div>
+
           ))}
 
         </div>
 
+
         {/* EXPECTED DISTRIBUTION */}
+
         <div className="distribution-info">
-          <span>Expected distribution</span>
-          <strong>10% per digit</strong>
+
+          <span>
+            Expected distribution
+          </span>
+
+          <strong>
+            10% per digit
+          </strong>
+
         </div>
 
       </section>
 
-      {/* ANALYSIS */}
+
+      {/* LAST DIGIT */}
+
       <section className="card">
-        <h2>Analysis</h2>
+
+        <h2>
+          Latest Digit
+        </h2>
 
         <p>
-          {market
-            ? "Market selected. Analysis will appear here."
-            : "Select a market and contract to begin analysis."}
+          Latest detected digit:
         </p>
+
+        <strong className="prediction-value">
+          {lastDigit === null ? "--" : lastDigit}
+        </strong>
+
       </section>
 
-      {/* PREDICTION */}
-      <section className="card prediction-card">
-        <h2>Prediction</h2>
 
-        <strong className="prediction-value">--</strong>
+      {/* ANALYSIS */}
+
+      <section className="card">
+
+        <h2>
+          Analysis
+        </h2>
 
         <p>
-          Confidence: <span>--%</span>
+
+          {market
+            ? `Market selected: ${market.replace("-", " ").toUpperCase()}`
+            : "Select a market and contract to begin analysis."}
+
         </p>
+
+      </section>
+
+
+      {/* PREDICTION */}
+
+      <section className="card prediction-card">
+
+        <h2>
+          Prediction
+        </h2>
+
+        <strong className="prediction-value">
+          --
+        </strong>
+
+        <p>
+          Confidence: --%
+        </p>
+
       </section>
 
     </main>
