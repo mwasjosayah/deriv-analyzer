@@ -25,7 +25,9 @@ button {
   padding: 48px 0 80px;
 }
 
-/* HEADER */
+/* =========================
+   HEADER
+========================= */
 
 .hero {
   text-align: center;
@@ -52,7 +54,9 @@ button {
   font-size: 1.1rem;
 }
 
-/* CARDS */
+/* =========================
+   CARDS
+========================= */
 
 .card {
   background: #101b2c;
@@ -68,7 +72,9 @@ button {
   font-size: 2rem;
 }
 
-/* MARKET BUTTONS */
+/* =========================
+   MARKET BUTTONS
+========================= */
 
 .market-buttons {
   display: grid;
@@ -86,6 +92,7 @@ button {
   font-size: 1.05rem;
   font-weight: 700;
   cursor: pointer;
+
   transition:
     background 0.2s ease,
     border-color 0.2s ease,
@@ -109,7 +116,9 @@ button {
   box-shadow: 0 0 20px rgba(22, 142, 229, 0.25);
 }
 
-/* DIGIT DISTRIBUTION */
+/* =========================
+   DIGIT DISTRIBUTION
+========================= */
 
 .digit-card {
   overflow: hidden;
@@ -132,24 +141,79 @@ button {
   color: #9eabc0;
 }
 
-.live-status {
-  display: flex;
+/* =========================
+   LIVE INDICATOR
+========================= */
+
+.live-indicator {
+  display: inline-flex;
   align-items: center;
-  gap: 7px;
-  color: #61e294;
-  font-size: 0.85rem;
-  font-weight: 700;
+  gap: 8px;
+  color: #4ade80;
+  font-size: 0.95rem;
+  font-weight: 800;
+
+  animation: liveFade 1.8s ease-in-out infinite;
 }
 
 .live-dot {
-  width: 9px;
-  height: 9px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: #35d878;
-  box-shadow: 0 0 10px rgba(53, 216, 120, 0.8);
+  background: #4ade80;
+
+  box-shadow:
+    0 0 8px rgba(74, 222, 128, 0.7),
+    0 0 18px rgba(74, 222, 128, 0.45);
+
+  animation: livePulse 1.8s ease-in-out infinite;
 }
 
-/* THE D CIRCLES */
+/* LIVE text fades in and out */
+@keyframes liveFade {
+  0% {
+    opacity: 0.35;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.35;
+  }
+}
+
+/* Green dot pulses */
+@keyframes livePulse {
+  0% {
+    transform: scale(0.75);
+    opacity: 0.4;
+    box-shadow:
+      0 0 5px rgba(74, 222, 128, 0.4),
+      0 0 10px rgba(74, 222, 128, 0.2);
+  }
+
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+    box-shadow:
+      0 0 10px rgba(74, 222, 128, 0.9),
+      0 0 22px rgba(74, 222, 128, 0.6);
+  }
+
+  100% {
+    transform: scale(0.75);
+    opacity: 0.4;
+    box-shadow:
+      0 0 5px rgba(74, 222, 128, 0.4),
+      0 0 10px rgba(74, 222, 128, 0.2);
+  }
+}
+
+/* =========================
+   DIGIT CIRCLES
+========================= */
 
 .digit-grid {
   display: grid;
@@ -169,13 +233,16 @@ button {
   border-radius: 50%;
   border: 3px solid #2e9fe8;
   background: #13243a;
+
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+
   box-shadow:
     0 0 18px rgba(46, 159, 232, 0.12),
     inset 0 0 18px rgba(46, 159, 232, 0.06);
+
   transition:
     transform 0.2s ease,
     border-color 0.2s ease,
@@ -185,7 +252,9 @@ button {
 .digit-circle:hover {
   transform: translateY(-4px);
   border-color: #5cc5ff;
-  box-shadow: 0 0 25px rgba(46, 159, 232, 0.25);
+
+  box-shadow:
+    0 0 25px rgba(46, 159, 232, 0.25);
 }
 
 .digit-number {
@@ -202,12 +271,18 @@ button {
   color: #42b5ff;
 }
 
+/* =========================
+   DISTRIBUTION INFO
+========================= */
+
 .distribution-info {
   border-top: 1px solid #24364d;
   padding-top: 20px;
+
   display: flex;
   justify-content: space-between;
   gap: 15px;
+
   color: #9eabc0;
 }
 
@@ -215,7 +290,9 @@ button {
   color: #42b5ff;
 }
 
-/* ANALYSIS */
+/* =========================
+   ANALYSIS
+========================= */
 
 .card p {
   color: #aeb9c9;
@@ -223,7 +300,9 @@ button {
   line-height: 1.6;
 }
 
-/* PREDICTION */
+/* =========================
+   PREDICTION
+========================= */
 
 .prediction-value {
   font-size: 4rem;
@@ -236,7 +315,9 @@ button {
   color: #42b5ff;
 }
 
-/* MOBILE */
+/* =========================
+   MOBILE
+========================= */
 
 @media (max-width: 600px) {
   .dashboard {
@@ -251,6 +332,15 @@ button {
 
   .card h2 {
     font-size: 1.8rem;
+  }
+
+  .section-heading {
+    align-items: flex-start;
+  }
+
+  .live-indicator {
+    flex-shrink: 0;
+    margin-top: 5px;
   }
 
   .digit-grid {
@@ -295,35 +385,13 @@ button {
   .digit-percent {
     font-size: 0.6rem;
   }
-}
-/* LIVE indicator animation */
-.live-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 700;
-  color: #4ade80;
-  animation: liveFade 1.8s ease-in-out infinite;
-}
 
-.live-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #4ade80;
-  box-shadow: 0 0 12px rgba(74, 222, 128, 0.8);
-}
-
-@keyframes liveFade {
-  0% {
-    opacity: 1;
+  .live-indicator {
+    font-size: 0.8rem;
   }
 
-  50% {
-    opacity: 0.25;
-  }
-
-  100% {
-    opacity: 1;
+  .live-dot {
+    width: 9px;
+    height: 9px;
   }
 }
