@@ -5,10 +5,13 @@ import { useEffect, useState } from "react";
 const digits = Array.from({ length: 10 }, (_, i) => i);
 
 const SYMBOL = "1HZ100V";
-const TICK_LIMIT = 1000;
+
+const TICK_OPTIONS = [100, 500, 1000, 2000, 5000];
 
 export default function Home() {
   const [market, setMarket] = useState("");
+
+  const [tickLimit, setTickLimit] = useState(1000);
 
   const [digitPercentages, setDigitPercentages] = useState<number[]>(
     Array(10).fill(0)
@@ -32,7 +35,7 @@ export default function Home() {
       ws.send(
         JSON.stringify({
           ticks_history: SYMBOL,
-          count: TICK_LIMIT,
+          count: tickLimit,
           end: "latest",
           style: "ticks",
           subscribe: 1,
@@ -44,13 +47,21 @@ export default function Home() {
       try {
         const data = JSON.parse(event.data);
 
-        if (data.msg_type === "history" && data.history?.prices) {
-          const prices = data.history.prices.map(Number);
+        /*
+         * HISTORICAL TICKS
+         */
+
+        if (
+          data.msg_type === "history" &&
+          data.history?.prices
+        ) {
+          const prices =
+            data.history.prices.map(Number);
 
           updateDigitDistribution(prices);
 
           setTicksAnalyzed(
-            Math.min(prices.length, TICK_LIMIT)
+            Math.min(prices.length, tickLimit)
           );
 
           if (prices.length > 0) {
@@ -63,16 +74,28 @@ export default function Home() {
           }
         }
 
+        /*
+         * LIVE TICK
+         */
+
         if (
           data.msg_type === "tick" &&
           data.tick?.quote !== undefined
         ) {
-          const quote = Number(data.tick.quote);
+          const quote = Number(
+            data.tick.quote
+          );
 
-          setLastDigit(getLastDigit(quote));
+          setLastDigit(
+            getLastDigit(quote)
+          );
         }
+
       } catch (error) {
-        console.error("Data error:", error);
+        console.error(
+          "Data error:",
+          error
+        );
       }
     };
 
@@ -87,60 +110,101 @@ export default function Home() {
     return () => {
       ws.close();
     };
-  }, []);
 
-  function getLastDigit(price: number): number {
-    const priceString = price.toString();
+  }, [tickLimit]);
+
+
+  /*
+   * GET LAST DIGIT
+   */
+
+  function getLastDigit(
+    price: number
+  ): number {
+
+    const priceString =
+      price.toString();
 
     const decimalPart =
       priceString.split(".")[1] || "";
 
     if (decimalPart.length === 0) {
-      return Math.abs(Math.floor(price)) % 10;
+      return (
+        Math.abs(
+          Math.floor(price)
+        ) % 10
+      );
     }
 
     return Number(
-      decimalPart[decimalPart.length - 1]
+      decimalPart[
+        decimalPart.length - 1
+      ]
     );
   }
+
+
+  /*
+   * CALCULATE DIGIT DISTRIBUTION
+   */
 
   function updateDigitDistribution(
     prices: number[]
   ) {
+
     if (!prices.length) return;
 
     const counts = Array(10).fill(0);
 
     prices.forEach((price) => {
-      const digit = getLastDigit(
-        Number(price)
-      );
 
-      if (digit >= 0 && digit <= 9) {
+      const digit =
+        getLastDigit(
+          Number(price)
+        );
+
+      if (
+        digit >= 0 &&
+        digit <= 9
+      ) {
         counts[digit]++;
       }
+
     });
 
-    const total = prices.length;
+    const total =
+      prices.length;
 
-    const percentages = counts.map(
-      (count) =>
-        Number(
-          ((count / total) * 100).toFixed(1)
-        )
+    const percentages =
+      counts.map(
+        (count) =>
+          Number(
+            (
+              (count / total) *
+              100
+            ).toFixed(1)
+          )
+      );
+
+    setDigitPercentages(
+      percentages
     );
-
-    setDigitPercentages(percentages);
   }
+
 
   return (
     <main className="dashboard">
 
-      {/* HEADER */}
+
+      {/* =========================
+          HEADER
+      ========================= */}
 
       <header className="hero">
 
-        <h1>Deriv Analyzer</h1>
+        <h1>
+          Deriv Analyzer
+        </h1>
 
         <p className="author">
           by Mwas Josayah
@@ -153,11 +217,15 @@ export default function Home() {
       </header>
 
 
-      {/* MARKET TYPE */}
+      {/* =========================
+          MARKET TYPE
+      ========================= */}
 
       <section className="card market-card">
 
-        <h2>Market Type</h2>
+        <h2>
+          Market Type
+        </h2>
 
         <div className="market-buttons">
 
@@ -168,11 +236,14 @@ export default function Home() {
                 : ""
             }
             onClick={() =>
-              setMarket("over-under")
+              setMarket(
+                "over-under"
+              )
             }
           >
             OVER / UNDER
           </button>
+
 
           <button
             className={
@@ -181,20 +252,26 @@ export default function Home() {
                 : ""
             }
             onClick={() =>
-              setMarket("even-odd")
+              setMarket(
+                "even-odd"
+              )
             }
           >
             EVEN / ODD
           </button>
 
+
           <button
             className={
-              market === "differs-matches"
+              market ===
+              "differs-matches"
                 ? "active"
                 : ""
             }
             onClick={() =>
-              setMarket("differs-matches")
+              setMarket(
+                "differs-matches"
+              )
             }
           >
             DIFFERS / MATCHES
@@ -205,9 +282,14 @@ export default function Home() {
       </section>
 
 
-      {/* DIGIT DISTRIBUTION */}
+      {/* =========================
+          DIGIT DISTRIBUTION
+      ========================= */}
 
       <section className="card digit-card">
+
+
+        {/* HEADER */}
 
         <div className="section-heading">
 
@@ -218,10 +300,12 @@ export default function Home() {
             </h2>
 
             <p>
-              Live distribution of the last digits
+              Live distribution of the
+              last digits
             </p>
 
           </div>
+
 
           <span className="live-indicator">
 
@@ -234,56 +318,118 @@ export default function Home() {
         </div>
 
 
-        {/* TICK ANALYSIS */}
+        {/* =========================
+            TICK SIZE SELECTOR
+        ========================= */}
 
-        <div className="tick-summary">
+        <div className="tick-selector">
 
-          <div className="tick-label">
+          <div className="tick-selector-title">
             Analysis Sample
           </div>
 
+          <div className="tick-options">
+
+            {TICK_OPTIONS.map(
+              (option) => (
+
+                <button
+                  key={option}
+                  className={
+                    tickLimit === option
+                      ? "selected"
+                      : ""
+                  }
+                  onClick={() =>
+                    setTickLimit(
+                      option
+                    )
+                  }
+                >
+                  {option.toLocaleString()}
+                </button>
+
+              )
+            )}
+
+          </div>
+
+          <div className="tick-selected">
+
+            Using{" "}
+            <strong>
+              {tickLimit.toLocaleString()}
+            </strong>{" "}
+            ticks for analysis
+
+          </div>
+
+        </div>
+
+
+        {/* =========================
+            TICK COUNT
+        ========================= */}
+
+        <div className="tick-summary">
+
           <div className="tick-number">
+
             {ticksAnalyzed.toLocaleString()}
+
           </div>
 
           <div className="tick-label">
+
             TICKS ANALYZED
+
           </div>
 
         </div>
 
 
-        {/* DIGIT CIRCLES */}
+        {/* =========================
+            DIGIT CIRCLES
+        ========================= */}
 
         <div className="digit-grid">
 
-          {digits.map((digit) => (
+          {digits.map(
+            (digit) => (
 
-            <div
-              className="digit-item"
-              key={digit}
-            >
+              <div
+                className="digit-item"
+                key={digit}
+              >
 
-              <div className="digit-circle">
+                <div className="digit-circle">
 
-                <span className="digit-number">
-                  {digit}
-                </span>
+                  <span className="digit-number">
+                    {digit}
+                  </span>
 
-                <span className="digit-percent">
-                  {digitPercentages[digit].toFixed(1)}%
-                </span>
+                  <span className="digit-percent">
+
+                    {digitPercentages[
+                      digit
+                    ].toFixed(1)}
+                    %
+
+                  </span>
+
+                </div>
 
               </div>
 
-            </div>
-
-          ))}
+            )
+          )}
 
         </div>
 
 
-        {/* EXPECTED DISTRIBUTION */}
+        {/* =========================
+            EXPECTED DISTRIBUTION
+        ========================= */}
 
         <div className="distribution-info">
 
@@ -300,7 +446,9 @@ export default function Home() {
       </section>
 
 
-      {/* LAST DIGIT */}
+      {/* =========================
+          LAST DIGIT
+      ========================= */}
 
       <section className="card">
 
@@ -323,7 +471,9 @@ export default function Home() {
       </section>
 
 
-      {/* ANALYSIS */}
+      {/* =========================
+          ANALYSIS
+      ========================= */}
 
       <section className="card">
 
@@ -344,7 +494,9 @@ export default function Home() {
       </section>
 
 
-      {/* PREDICTION */}
+      {/* =========================
+          PREDICTION
+      ========================= */}
 
       <section className="card prediction-card">
 
