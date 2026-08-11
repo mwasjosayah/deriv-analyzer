@@ -1,38 +1,433 @@
-* {
-  box-sizing: border-box;
-}
+"use client";
 
-html,
-body {
-  margin: 0;
-  padding: 0;
-  background: #07101f;
-  color: #f4f7fb;
-  font-family: Arial, Helvetica, sans-serif;
-}
+import { useEffect, useState } from "react";
 
-body {
-  min-height: 100vh;
-}
+const digits = Array.from({ length: 10 }, (_, i) => i);
 
-button {
-  font: inherit;
-}
+const SYMBOL = "1HZ100V";
 
-.dashboard {
-  width: min(100% - 24px, 900px);
-  margin: 0 auto;
-  padding: 32px 0 80px;
-}
+const TICK_OPTIONS = [100, 500, 1000, 2000, 5000];
 
-/* =========================
-   HEADER
-========================= */
+export default function Home() {
+  const [market, setMarket] = useState("");
 
-.hero {
-  text-align: center;
-  margin-bottom: 40px;
-}
+  const [tickLimit, setTickLimit] = useState(1000);
+
+  const [digitPercentages, setDigitPercentages] =
+    useState<number[]>(Array(10).fill(0));
+
+  const [lastDigit, setLastDigit] =
+    useState<number | null>(null);
+
+  const [connectionStatus, setConnectionStatus] =
+    useState("CONNECTING");
+
+  const [ticksAnalyzed, setTicksAnalyzed] =
+    useState(0);
+
+  /*
+   * Get the final digit of a price
+   */
+  function getLastDigit(price: number): number {
+    const priceString = price.toString();
+
+    const decimalPart =
+      priceString.split(".")[1] || "";
+
+    if (decimalPart.length === 0) {
+      return Math.abs(Math.floor(price)) % 10;
+    }
+
+    return Number(
+      decimalPart[decimalPart.length - 1]
+    );
+  }
+
+  /*
+   * Calculate digit percentages
+   */
+  function calculateDistribution(prices: number[]) {
+    if (!prices.length) return;
+
+    const counts = Array(10).fill(0);
+
+    prices.forEach((price) => {
+      const digit = getLastDigit(Number(price));
+
+      if (digit >= 0 && digit <= 9) {
+        counts[digit]++;
+      }
+    });
+
+    const total = prices.length;
+
+    const percentages = counts.map((count) =>
+      Number(((count / total) * 100).toFixed(1))
+    );
+
+    setDigitPercentages(percentages);
+    setTicksAnalyzed(prices.length);
+  }
+
+  /*
+   * Connect to Deriv
+   */
+  useEffect(() => {
+    setConnectionStatus("CONNECTING");
+    setDigitPercentages(Array(10).fill(0));
+    setTicksAnalyzed(0);
+
+    const ws = new WebSocket(
+      "wss://api.derivws.com/trading/v1/options/ws/public"
+    );
+
+    let currentPrices: number[] = [];
+
+    ws.onopen = () => {
+      setConnectionStatus("LIVE");
+
+      ws.send(
+        JSON.stringify({
+          ticks_history: SYMBOL,
+          count: tickLimit,
+          end: "latest",
+          style: "ticks",
+          subscribe: 1,
+        })
+      );
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+
+        /*
+         * Historical ticks
+         */
+        if (
+          data.msg_type === "history" &&
+          data.history?.prices
+        ) {
+          currentPrices =
+            data.history.prices
+              .map(Number)
+              .slice(-tickLimit);
+
+          calculateDistribution(currentPrices);
+
+          if (currentPrices.length > 0) {
+            const latest =
+              currentPrices[currentPrices.length - 1];
+
+            setLastDigit(
+              getLastDigit(latest)
+            );
+          }
+        }
+
+        /*
+         * New live tick
+         */
+        if (
+          data.msg_type === "tick" &&
+          data.tick?.quote !== undefined
+        ) {
+          const quote = Number(data.tick.quote);
+
+          /*
+           * Add newest tick
+           */
+          currentPrices = [
+            ...currentPrices,
+            quote,
+          ];
+
+          /*
+           * Keep only selected number of ticks
+           */
+          if (currentPrices.length > tickLimit) {
+            currentPrices =
+              currentPrices.slice(-tickLimit);
+          }
+
+          /*
+           * Recalculate distribution
+           */
+          calculateDistribution(currentPrices);
+
+          /*
+           * Update current digit
+           */
+          setLastDigit(
+            getLastDigit(quote)
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Data error:",
+          error
+        );
+      }
+    };
+
+    ws.onerror = () => {
+      setConnectionStatus("ERROR");
+    };
+
+    ws.onclose = () => {
+      setConnectionStatus("DISCONNECTED");
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, [tickLimit]);
+
+  /*
+   * Determine ranking colour
+   */
+  function getRankClass(digit: number) {
+    const ranked = digitPercentages
+      .map((percentage, index) => ({
+        digit: index,
+        percentage,
+      }))
+      .sort(
+        (a, b) =>
+          b.percentage - a.percentage
+      );
+
+    const highest = ranked[0]?.digit;
+    const secondHighest = ranked[1]?.digit;
+    const thirdHighest = ranked[2]?.digit;
+
+    const lowest = ranked[9]?.digit;
+    const secondLowest = ranked[8]?.digit;
+    const thirdLowest = ranked[7]?.digit;
+
+    if (digit === highest) {
+      return "rank-highest";
+    }
+
+    if (digit === secondHighest) {
+      return "rank-second-high";
+    }
+
+    if (digit === thirdHighest) {
+      return "rank-third-high";
+    }
+
+    if (digit === lowest) {
+      return "rank-lowest";
+    }
+
+    if (digit === secondLowest) {
+      return "rank-second-low";
+    }
+
+    if (digit === thirdLowest) {
+      return "rank-third-low";
+    }
+
+    return "rank-normal";
+  }
+
+  return (
+    <main className="dashboard">
+
+      {/* =========================
+          HEADER
+      ========================= */}
+
+      <header className="hero">
+
+        <h1>
+          Deriv Analyzer
+        </h1>
+
+        <p className="author">
+          by Mwas Josayah
+        </p>
+
+        <p className="subtitle">
+          Smart Market Analysis
+        </p>
+
+      </header>
+
+
+      {/* =========================
+          MARKET TYPE
+      ========================= */}
+
+      <section className="card market-card">
+
+        <h2>
+          Market Type
+        </h2>
+
+        <div className="market-buttons">
+
+          <button
+            className={
+              market === "over-under"
+                ? "active"
+                : ""
+            }
+            onClick={() =>
+              setMarket("over-under")
+            }
+          >
+            OVER / UNDER
+          </button>
+
+          <button
+            className={
+              market === "even-odd"
+                ? "active"
+                : ""
+            }
+            onClick={() =>
+              setMarket("even-odd")
+            }
+          >
+            EVEN / ODD
+          </button>
+
+          <button
+            className={
+              market === "differs-matches"
+                ? "active"
+                : ""
+            }
+            onClick={() =>
+              setMarket(
+                "differs-matches"
+              )
+            }
+          >
+            DIFFERS / MATCHES
+          </button>
+
+        </div>
+
+      </section>
+
+
+      {/* =========================
+          DIGIT DISTRIBUTION
+      ========================= */}
+
+      <section className="card digit-card">
+
+        <div className="section-heading">
+
+          <div>
+
+            <h2>
+              Digit Distribution
+            </h2>
+
+            <p>
+              Live distribution of the last digits
+            </p>
+
+          </div>
+
+          <span className="live-indicator">
+
+            <span className="live-dot"></span>
+
+            {connectionStatus}
+
+          </span>
+
+        </div>
+
+
+        {/* =========================
+            TICK SAMPLE
+        ========================= */}
+
+        <div className="tick-label">
+          Analysis Sample
+        </div>
+
+        <div className="tick-samples">
+
+          {TICK_OPTIONS.map((amount) => (
+
+            <button
+              key={amount}
+              className={
+                tickLimit === amount
+                  ? "active"
+                  : ""
+              }
+              onClick={() =>
+                setTickLimit(amount)
+              }
+            >
+              {amount.toLocaleString()}
+            </button>
+
+          ))}
+
+        </div>
+
+        <p className="tick-description">
+          Using{" "}
+          <strong>
+            {tickLimit.toLocaleString()}
+          </strong>{" "}
+          ticks for analysis
+        </p>
+
+
+        {/* =========================
+            TICK SUMMARY
+        ========================= */}
+
+        <div className="tick-summary">
+
+          <div className="tick-number">
+            {ticksAnalyzed.toLocaleString()}
+          </div>
+
+          <div className="tick-label">
+            TICKS ANALYZED
+          </div>
+
+        </div>
+
+
+        {/* =========================
+            DIGIT CIRCLES
+        ========================= */}
+
+        <div className="digit-grid">
+
+          {digits.map((digit) => (
+
+            <div
+              className="digit-item"
+              key={digit}
+            >
+
+              {/* RED CURRENT TICK POINTER */}
+
+              {lastDigit === digit && (
+                <div className="tick-pointer"></div>
+              )}
+
+              <div
+                className={`digit-circle ${getRankClass(
+                  digit
+                )}`}
+              >
+
+                <span className="digit-number">
+                  {
 
 .hero h1 {
   margin: 0;
