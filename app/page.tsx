@@ -3,7 +3,8 @@ export default function Home() {
     <main className="dashboard">
       <header>
         <h1>Deriv Analyzer</h1>
-        <p>Smart market analysis</p>
+        <p>by Mwas Josayah</p>
+        <span>Smart Market Analysis</span>
       </header>
 
       <section className="market">
