@@ -4,18 +4,25 @@ import { useEffect, useState } from "react";
 
 const digits = Array.from({ length: 10 }, (_, i) => i);
 
-// Starting market.
-// We can make this selectable later.
+// Market to analyze
 const SYMBOL = "1HZ100V";
+
+// Number of ticks used for the analysis
+const TICK_LIMIT = 1000;
 
 export default function Home() {
   const [market, setMarket] = useState("");
+
   const [digitPercentages, setDigitPercentages] = useState<number[]>(
     Array(10).fill(0)
   );
 
   const [lastDigit, setLastDigit] = useState<number | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState("CONNECTING");
+
+  const [connectionStatus, setConnectionStatus] =
+    useState("CONNECTING");
+
+  const [ticksAnalyzed, setTicksAnalyzed] = useState(0);
 
   useEffect(() => {
     const ws = new WebSocket(
@@ -25,10 +32,13 @@ export default function Home() {
     ws.onopen = () => {
       setConnectionStatus("LIVE");
 
+      /*
+       * Request 1,000 historical ticks.
+       */
       ws.send(
         JSON.stringify({
           ticks_history: SYMBOL,
-          count: 100,
+          count: TICK_LIMIT,
           end: "latest",
           style: "ticks",
           subscribe: 1,
@@ -41,25 +51,41 @@ export default function Home() {
         const data = JSON.parse(event.data);
 
         /*
-         * Historical tick data
+         * Historical ticks
          */
         if (data.msg_type === "history" && data.history?.prices) {
-          const prices = data.history.prices;
+          const prices = data.history.prices.map(Number);
 
           updateDigitDistribution(prices);
+
+          setTicksAnalyzed(
+            Math.min(prices.length, TICK_LIMIT)
+          );
+
+          if (prices.length > 0) {
+            const latestPrice = prices[prices.length - 1];
+
+            setLastDigit(getLastDigit(latestPrice));
+          }
         }
 
         /*
          * Live tick
          */
-        if (data.msg_type === "tick" && data.tick?.quote !== undefined) {
-          const quote = data.tick.quote;
+        if (
+          data.msg_type === "tick" &&
+          data.tick?.quote !== undefined
+        ) {
+          const quote = Number(data.tick.quote);
 
-          updateDigitDistribution([quote]);
+          setLastDigit(getLastDigit(quote));
 
-          const digit = getLastDigit(quote);
-
-          setLastDigit(digit);
+          /*
+           * The live tick is handled separately.
+           *
+           * We will maintain the rolling 1,000-tick
+           * dataset in the next data-engine step.
+           */
         }
       } catch (error) {
         console.error("Data error:", error);
@@ -88,7 +114,7 @@ export default function Home() {
     const decimalPart = priceString.split(".")[1] || "";
 
     if (decimalPart.length === 0) {
-      return price % 10;
+      return Math.abs(Math.floor(price)) % 10;
     }
 
     return Number(decimalPart[decimalPart.length - 1]);
@@ -122,10 +148,15 @@ export default function Home() {
   return (
     <main className="dashboard">
 
-      {/* HEADER */}
+      {/* =========================
+          HEADER
+      ========================= */}
 
       <header className="hero">
-        <h1>Deriv Analyzer</h1>
+
+        <h1>
+          Deriv Analyzer
+        </h1>
 
         <p className="author">
           by Mwas Josayah
@@ -134,34 +165,57 @@ export default function Home() {
         <p className="subtitle">
           Smart Market Analysis
         </p>
+
       </header>
 
 
-      {/* MARKET TYPE */}
+      {/* =========================
+          MARKET TYPE
+      ========================= */}
 
       <section className="card market-card">
 
-        <h2>Market Type</h2>
+        <h2>
+          Market Type
+        </h2>
 
         <div className="market-buttons">
 
           <button
-            className={market === "over-under" ? "active" : ""}
-            onClick={() => setMarket("over-under")}
+            className={
+              market === "over-under"
+                ? "active"
+                : ""
+            }
+            onClick={() =>
+              setMarket("over-under")
+            }
           >
             OVER / UNDER
           </button>
 
           <button
-            className={market === "even-odd" ? "active" : ""}
-            onClick={() => setMarket("even-odd")}
+            className={
+              market === "even-odd"
+                ? "active"
+                : ""
+            }
+            onClick={() =>
+              setMarket("even-odd")
+            }
           >
             EVEN / ODD
           </button>
 
           <button
-            className={market === "differs-matches" ? "active" : ""}
-            onClick={() => setMarket("differs-matches")}
+            className={
+              market === "differs-matches"
+                ? "active"
+                : ""
+            }
+            onClick={() =>
+              setMarket("differs-matches")
+            }
           >
             DIFFERS / MATCHES
           </button>
@@ -171,20 +225,66 @@ export default function Home() {
       </section>
 
 
-      {/* DIGIT DISTRIBUTION */}
+      {/* =========================
+          TICK ANALYSIS
+      ========================= */}
+
+      <section className="card tick-card">
+
+        <div className="section-heading">
+
+          <div>
+
+            <h2>
+              Tick Analysis
+            </h2>
+
+            <p>
+              Sample size used for analysis
+            </p>
+
+          </div>
+
+          <span className="tick-status">
+            {TICK_LIMIT.toLocaleString()} TICKS
+          </span>
+
+        </div>
+
+        <div className="tick-summary">
+
+          <div className="tick-number">
+            {ticksAnalyzed.toLocaleString()}
+          </div>
+
+          <div className="tick-label">
+            Recent ticks analyzed
+          </div>
+
+        </div>
+
+      </section>
+
+
+      {/* =========================
+          DIGIT DISTRIBUTION
+      ========================= */}
 
       <section className="card digit-card">
 
         <div className="section-heading">
 
           <div>
-            <h2>Digit Distribution</h2>
+
+            <h2>
+              Digit Distribution
+            </h2>
 
             <p>
               Live distribution of the last digits
             </p>
-          </div>
 
+          </div>
 
           {/* LIVE */}
 
@@ -246,7 +346,9 @@ export default function Home() {
       </section>
 
 
-      {/* LAST DIGIT */}
+      {/* =========================
+          LAST DIGIT
+      ========================= */}
 
       <section className="card">
 
@@ -259,13 +361,19 @@ export default function Home() {
         </p>
 
         <strong className="prediction-value">
-          {lastDigit === null ? "--" : lastDigit}
+
+          {lastDigit === null
+            ? "--"
+            : lastDigit}
+
         </strong>
 
       </section>
 
 
-      {/* ANALYSIS */}
+      {/* =========================
+          ANALYSIS
+      ========================= */}
 
       <section className="card">
 
@@ -276,7 +384,9 @@ export default function Home() {
         <p>
 
           {market
-            ? `Market selected: ${market.replace("-", " ").toUpperCase()}`
+            ? `Market selected: ${market
+                .replace("-", " ")
+                .toUpperCase()}`
             : "Select a market and contract to begin analysis."}
 
         </p>
@@ -284,7 +394,9 @@ export default function Home() {
       </section>
 
 
-      {/* PREDICTION */}
+      {/* =========================
+          PREDICTION
+      ========================= */}
 
       <section className="card prediction-card">
 
