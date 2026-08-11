@@ -246,4 +246,122 @@ export default function Home() {
             {ticksAnalyzed.toLocaleString()}
           </div>
 
-         
+          <div className="tick-label">
+            TICKS ANALYZED
+          </div>
+
+        </div>
+
+
+        {/* DIGIT CIRCLES */}
+
+        <div className="digit-grid">
+
+          {digits.map((digit) => (
+
+            <div
+              className="digit-item"
+              key={digit}
+            >
+
+              <div className="digit-circle">
+
+                <span className="digit-number">
+                  {digit}
+                </span>
+
+                <span className="digit-percent">
+                  {digitPercentages[digit].toFixed(1)}%
+                </span>
+
+              </div>
+
+            </div>
+
+          ))}
+
+        </div>
+
+
+        {/* EXPECTED DISTRIBUTION */}
+
+        <div className="distribution-info">
+
+          <span>
+            Expected distribution
+          </span>
+
+          <strong>
+            10% per digit
+          </strong>
+
+        </div>
+
+      </section>
+
+
+      {/* LAST DIGIT */}
+
+      <section className="card">
+
+        <h2>
+          Latest Digit
+        </h2>
+
+        <p>
+          Latest detected digit:
+        </p>
+
+        <strong className="prediction-value">
+
+          {lastDigit === null
+            ? "--"
+            : lastDigit}
+
+        </strong>
+
+      </section>
+
+
+      {/* ANALYSIS */}
+
+      <section className="card">
+
+        <h2>
+          Analysis
+        </h2>
+
+        <p>
+
+          {market
+            ? `Market selected: ${market
+                .replace("-", " ")
+                .toUpperCase()}`
+            : "Select a market and contract to begin analysis."}
+
+        </p>
+
+      </section>
+
+
+      {/* PREDICTION */}
+
+      <section className="card prediction-card">
+
+        <h2>
+          Prediction
+        </h2>
+
+        <strong className="prediction-value">
+          --
+        </strong>
+
+        <p>
+          Confidence: --%
+        </p>
+
+      </section>
+
+    </main>
+  );
+}
