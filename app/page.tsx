@@ -49,11 +49,10 @@ export default function Home() {
             <p>Live distribution of the last digits</p>
           </div>
 
-          <span className="live-status">
-            <span className="live-dot"></span>
-            LIVE
-          </span>
-        </div>
+<span className="live-indicator">
+  <span className="live-dot"></span>
+  LIVE
+</span>
 
         <div className="digit-grid">
           {digits.map((digit) => (
