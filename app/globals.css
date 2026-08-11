@@ -1,101 +1,143 @@
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 html,
 body {
-  margin: 0;
-  padding: 0;
-  background: #07111f;
-  color: #ffffff;
-  font-family: Arial, sans-serif;
+  min-height: 100%;
 }
 
 body {
-  min-height: 100vh;
+  background: #0b1120;
+  color: #f8fafc;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .dashboard {
   width: 100%;
   max-width: 1100px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 30px 20px 50px;
 }
 
-header {
-  padding: 20px 0 30px;
+/* Header */
+.dashboard header {
+  text-align: center;
+  margin-bottom: 35px;
 }
 
-header h1 {
-  margin: 0;
-  font-size: 32px;
-  font-weight: 700;
+.dashboard header h1 {
+  font-size: 38px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  color: #ffffff;
+  margin-bottom: 8px;
 }
 
-header p {
-  margin: 8px 0 4px;
-  color: #4da3ff;
+.dashboard header p {
+  color: #94a3b8;
   font-size: 16px;
-  font-weight: 600;
 }
 
-header span {
-  color: #8fa3b8;
-  font-size: 14px;
+/* Market section */
+.market {
+  background: #111827;
+  border: 1px solid #1e293b;
+  border-radius: 18px;
+  padding: 24px;
+  margin-bottom: 22px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
 }
 
-.market,
-.card {
-  background: #0d1b2a;
-  border: 1px solid #20344a;
-  border-radius: 16px;
-  padding: 20px;
+.market h2 {
+  font-size: 20px;
   margin-bottom: 18px;
+  color: #e2e8f0;
 }
 
-.market h2,
-.card h2 {
-  margin-top: 0;
-  margin-bottom: 18px;
-}
-
-.market-buttons {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-
-button {
-  border: 1px solid #285078;
+/* Market buttons */
+.market button {
+  background: #1e293b;
+  color: #e2e8f0;
+  border: 1px solid #334155;
   border-radius: 10px;
-  padding: 15px 12px;
-  background: #102943;
-  color: white;
+  padding: 13px 18px;
+  margin: 5px;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
+  transition: 0.2s ease;
 }
 
-button:active {
-  transform: scale(0.98);
+.market button:hover {
+  background: #2563eb;
+  border-color: #3b82f6;
+  color: white;
+}
+
+.market button:active {
+  transform: scale(0.97);
+}
+
+/* Cards */
+.card {
+  background: #111827;
+  border: 1px solid #1e293b;
+  border-radius: 18px;
+  padding: 25px;
+  margin-bottom: 22px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+}
+
+.card h2 {
+  color: #e2e8f0;
+  font-size: 20px;
+  margin-bottom: 15px;
+}
+
+.card p {
+  color: #94a3b8;
+  font-size: 16px;
 }
 
 .card strong {
   display: block;
-  font-size: 48px;
-  margin: 15px 0;
+  font-size: 42px;
+  color: #38bdf8;
+  margin: 10px 0;
 }
 
+/* Mobile */
 @media (max-width: 600px) {
   .dashboard {
-    padding: 16px;
+    padding: 22px 14px 40px;
   }
 
-  header h1 {
-    font-size: 28px;
+  .dashboard header h1 {
+    font-size: 30px;
   }
 
-  .market-buttons {
-    grid-template-columns: 1fr;
+  .dashboard header p {
+    font-size: 14px;
+  }
+
+  .market {
+    padding: 18px;
+  }
+
+  .market button {
+    width: 100%;
+    margin: 5px 0;
+    padding: 14px;
+  }
+
+  .card {
+    padding: 20px;
+  }
+
+  .card strong {
+    font-size: 36px;
   }
 }
