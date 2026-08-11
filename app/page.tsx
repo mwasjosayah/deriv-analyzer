@@ -1,17 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 const digits = Array.from({ length: 10 }, (_, i) => i);
 
 const SYMBOL = "1HZ100V";
 
-const TICK_OPTIONS = [100, 500, 1000, 2000, 5000];
-
 export default function Home() {
   const [market, setMarket] = useState("");
-
-  const [tickLimit, setTickLimit] = useState(1000);
 
   const [digitPercentages, setDigitPercentages] = useState<number[]>(
     Array(10).fill(0)
@@ -24,15 +20,64 @@ export default function Home() {
 
   const [ticksAnalyzed, setTicksAnalyzed] = useState(0);
 
-  const tickBuffer = useRef<number[]>([]);
+  const [tickLimit, setTickLimit] = useState(500);
+
+  /*
+   * =========================
+   * DIGIT RANKING
+   * =========================
+   */
+
+  function getDigitRankClass(digit: number): string {
+    const ranked = digitPercentages
+      .map((percentage, index) => ({
+        digit: index,
+        percentage,
+      }))
+      .sort((a, b) => b.percentage - a.percentage);
+
+    const highest = ranked[0]?.digit;
+    const secondHighest = ranked[1]?.digit;
+    const thirdHighest = ranked[2]?.digit;
+
+    const lowest = ranked[ranked.length - 1]?.digit;
+    const secondLowest = ranked[ranked.length - 2]?.digit;
+    const thirdLowest = ranked[ranked.length - 3]?.digit;
+
+    if (digit === highest) {
+      return "rank-highest";
+    }
+
+    if (digit === secondHighest) {
+      return "rank-second-highest";
+    }
+
+    if (digit === thirdHighest) {
+      return "rank-third-highest";
+    }
+
+    if (digit === lowest) {
+      return "rank-lowest";
+    }
+
+    if (digit === secondLowest) {
+      return "rank-second-lowest";
+    }
+
+    if (digit === thirdLowest) {
+      return "rank-third-lowest";
+    }
+
+    return "rank-normal";
+  }
+
+  /*
+   * =========================
+   * WEBSOCKET
+   * =========================
+   */
 
   useEffect(() => {
-    tickBuffer.current = [];
-
-    setDigitPercentages(Array(10).fill(0));
-    setTicksAnalyzed(0);
-    setConnectionStatus("CONNECTING");
-
     const ws = new WebSocket(
       "wss://api.derivws.com/trading/v1/options/ws/public"
     );
@@ -56,93 +101,43 @@ export default function Home() {
         const data = JSON.parse(event.data);
 
         /*
-         * HISTORICAL TICKS
+         * Historical ticks
          */
         if (
           data.msg_type === "history" &&
           data.history?.prices
         ) {
-          const prices =
-            data.history.prices.map(Number);
+          const prices = data.history.prices.map(Number);
 
-          tickBuffer.current =
-            prices.slice(-tickLimit);
-
-          updateDigitDistribution(
-            tickBuffer.current
-          );
+          updateDigitDistribution(prices);
 
           setTicksAnalyzed(
-            tickBuffer.current.length
+            Math.min(prices.length, tickLimit)
           );
 
-          if (tickBuffer.current.length > 0) {
+          if (prices.length > 0) {
             const latestPrice =
-              tickBuffer.current[
-                tickBuffer.current.length - 1
-              ];
+              prices[prices.length - 1];
 
             setLastDigit(
               getLastDigit(latestPrice)
             );
           }
-
-          return;
         }
 
         /*
-         * LIVE TICK
+         * Live tick
          */
         if (
           data.msg_type === "tick" &&
           data.tick?.quote !== undefined
         ) {
-          const quote = Number(
-            data.tick.quote
-          );
+          const quote = Number(data.tick.quote);
 
-          const newDigit =
-            getLastDigit(quote);
-
-          /*
-           * Move the red pointer to
-           * the new current digit.
-           */
-          setLastDigit(newDigit);
-
-          /*
-           * Add new tick.
-           */
-          tickBuffer.current.push(quote);
-
-          /*
-           * Keep only selected number
-           * of ticks.
-           */
-          if (
-            tickBuffer.current.length >
-            tickLimit
-          ) {
-            tickBuffer.current.shift();
-          }
-
-          /*
-           * Recalculate distribution.
-           */
-          updateDigitDistribution(
-            tickBuffer.current
-          );
-
-          setTicksAnalyzed(
-            tickBuffer.current.length
-          );
+          setLastDigit(getLastDigit(quote));
         }
-
       } catch (error) {
-        console.error(
-          "Data error:",
-          error
-        );
+        console.error("Data error:", error);
       }
     };
 
@@ -157,42 +152,35 @@ export default function Home() {
     return () => {
       ws.close();
     };
-
   }, [tickLimit]);
 
-
   /*
+   * =========================
    * GET LAST DIGIT
+   * =========================
    */
-  function getLastDigit(
-    price: number
-  ): number {
 
-    const priceString =
-      price.toString();
+  function getLastDigit(price: number): number {
+    const priceString = price.toString();
 
     const decimalPart =
       priceString.split(".")[1] || "";
 
     if (decimalPart.length === 0) {
-      return (
-        Math.abs(
-          Math.floor(price)
-        ) % 10
-      );
+      return Math.abs(Math.floor(price)) % 10;
     }
 
     return Number(
-      decimalPart[
-        decimalPart.length - 1
-      ]
+      decimalPart[decimalPart.length - 1]
     );
   }
 
-
   /*
-   * CALCULATE DIGIT DISTRIBUTION
+   * =========================
+   * DIGIT DISTRIBUTION
+   * =========================
    */
+
   function updateDigitDistribution(
     prices: number[]
   ) {
@@ -201,36 +189,30 @@ export default function Home() {
     const counts = Array(10).fill(0);
 
     prices.forEach((price) => {
-      const digit =
-        getLastDigit(Number(price));
+      const digit = getLastDigit(Number(price));
 
-      if (
-        digit >= 0 &&
-        digit <= 9
-      ) {
+      if (digit >= 0 && digit <= 9) {
         counts[digit]++;
       }
     });
 
-    const total =
-      prices.length;
+    const total = prices.length;
 
-    const percentages =
-      counts.map(
-        (count) =>
-          Number(
-            (
-              (count / total) *
-              100
-            ).toFixed(1)
-          )
-      );
-
-    setDigitPercentages(
-      percentages
+    const percentages = counts.map(
+      (count) =>
+        Number(
+          ((count / total) * 100).toFixed(1)
+        )
     );
+
+    setDigitPercentages(percentages);
   }
 
+  /*
+   * =========================
+   * PAGE
+   * =========================
+   */
 
   return (
     <main className="dashboard">
@@ -239,9 +221,7 @@ export default function Home() {
 
       <header className="hero">
 
-        <h1>
-          Deriv Analyzer
-        </h1>
+        <h1>Deriv Analyzer</h1>
 
         <p className="author">
           by Mwas Josayah
@@ -258,9 +238,7 @@ export default function Home() {
 
       <section className="card market-card">
 
-        <h2>
-          Market Type
-        </h2>
+        <h2>Market Type</h2>
 
         <div className="market-buttons">
 
@@ -297,9 +275,7 @@ export default function Home() {
                 : ""
             }
             onClick={() =>
-              setMarket(
-                "differs-matches"
-              )
+              setMarket("differs-matches")
             }
           >
             DIFFERS / MATCHES
@@ -339,31 +315,31 @@ export default function Home() {
         </div>
 
 
-        {/* TICK SELECTOR */}
+        {/* TICK ANALYSIS */}
 
-        <div className="tick-selector">
+        <div className="tick-summary">
 
-          <div className="tick-selector-title">
+          <div className="tick-label">
             Analysis Sample
           </div>
 
-          <div className="tick-options">
+          <div className="tick-buttons">
 
-            {TICK_OPTIONS.map(
-              (option) => (
+            {[100, 500, 1000, 2000, 5000].map(
+              (amount) => (
 
                 <button
-                  key={option}
+                  key={amount}
                   className={
-                    tickLimit === option
-                      ? "selected"
-                      : ""
+                    tickLimit === amount
+                      ? "tick-button active"
+                      : "tick-button"
                   }
                   onClick={() =>
-                    setTickLimit(option)
+                    setTickLimit(amount)
                   }
                 >
-                  {option.toLocaleString()}
+                  {amount.toLocaleString()}
                 </button>
 
               )
@@ -371,33 +347,20 @@ export default function Home() {
 
           </div>
 
-          <div className="tick-selected">
-
+          <div className="tick-using">
             Using{" "}
             <strong>
               {tickLimit.toLocaleString()}
             </strong>{" "}
             ticks for analysis
-
           </div>
 
-        </div>
-
-
-        {/* TICK SUMMARY */}
-
-        <div className="tick-summary">
-
           <div className="tick-number">
-
             {ticksAnalyzed.toLocaleString()}
-
           </div>
 
           <div className="tick-label">
-
             TICKS ANALYZED
-
           </div>
 
         </div>
@@ -407,61 +370,32 @@ export default function Home() {
 
         <div className="digit-grid">
 
-          {digits.map(
-            (digit) => (
+          {digits.map((digit) => (
+
+            <div
+              className="digit-item"
+              key={digit}
+            >
 
               <div
-                className={
-                  `digit-item ${
-                    lastDigit === digit
-                      ? "current-digit"
-                      : ""
-                  }`
-                }
-                key={digit}
+                className={`digit-circle ${getDigitRankClass(
+                  digit
+                )}`}
               >
 
-                {/* RED TRIANGLE POINTER */}
+                <span className="digit-number">
+                  {digit}
+                </span>
 
-                {lastDigit === digit && (
-                  <div className="tick-pointer">
-                    <span></span>
-                  </div>
-                )}
-
-                <div className="digit-circle">
-
-                  <span className="digit-number">
-                    {digit}
-                  </span>
-
-                  <span className="digit-percent">
-
-                    {digitPercentages[digit].toFixed(1)}%
-
-                  </span>
-
-                </div>
+                <span className="digit-percent">
+                  {digitPercentages[digit].toFixed(1)}%
+                </span>
 
               </div>
 
-            )
-          )}
+            </div>
 
-        </div>
-
-
-        {/* CURRENT TICK */}
-
-        <div className="current-tick">
-
-          Current Tick:{" "}
-
-          <strong>
-            {lastDigit === null
-              ? "--"
-              : lastDigit}
-          </strong>
+          ))}
 
         </div>
 
@@ -483,7 +417,7 @@ export default function Home() {
       </section>
 
 
-      {/* LATEST DIGIT */}
+      {/* LAST DIGIT */}
 
       <section className="card">
 
