@@ -296,3 +296,34 @@ button {
     font-size: 0.6rem;
   }
 }
+/* LIVE indicator animation */
+.live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: #4ade80;
+  animation: liveFade 1.8s ease-in-out infinite;
+}
+
+.live-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 12px rgba(74, 222, 128, 0.8);
+}
+
+@keyframes liveFade {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.25;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
