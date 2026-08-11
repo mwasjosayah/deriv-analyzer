@@ -8,9 +8,13 @@ export default function Home() {
       </header>
 
       <section className="market">
-        <h2>Market</h2>
-        <button>Over 2</button>
-        <button>Under 7</button>
+        <h2>Market Type</h2>
+
+        <div className="market-buttons">
+          <button>OVER / UNDER</button>
+          <button>EVEN / ODD</button>
+          <button>DIFFERS / MATCHES</button>
+        </div>
       </section>
 
       <section className="card">
