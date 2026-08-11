@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const digits = Array.from({ length: 10 }, (_, i) => i);
 
@@ -24,7 +24,23 @@ export default function Home() {
 
   const [ticksAnalyzed, setTicksAnalyzed] = useState(0);
 
+  /*
+   * Rolling collection of ticks currently
+   * being used for the analysis.
+   */
+  const tickBuffer = useRef<number[]>([]);
+
   useEffect(() => {
+    /*
+     * Clear the old sample whenever the
+     * selected tick size changes.
+     */
+    tickBuffer.current = [];
+
+    setDigitPercentages(Array(10).fill(0));
+    setTicksAnalyzed(0);
+    setConnectionStatus("CONNECTING");
+
     const ws = new WebSocket(
       "wss://api.derivws.com/trading/v1/options/ws/public"
     );
@@ -50,7 +66,6 @@ export default function Home() {
         /*
          * HISTORICAL TICKS
          */
-
         if (
           data.msg_type === "history" &&
           data.history?.prices
@@ -58,26 +73,44 @@ export default function Home() {
           const prices =
             data.history.prices.map(Number);
 
-          updateDigitDistribution(prices);
+          /*
+           * Store the selected number of
+           * historical ticks.
+           */
+          tickBuffer.current =
+            prices.slice(-tickLimit);
 
-          setTicksAnalyzed(
-            Math.min(prices.length, tickLimit)
+          /*
+           * Calculate distribution.
+           */
+          updateDigitDistribution(
+            tickBuffer.current
           );
 
-          if (prices.length > 0) {
+          setTicksAnalyzed(
+            tickBuffer.current.length
+          );
+
+          /*
+           * Latest historical digit.
+           */
+          if (tickBuffer.current.length > 0) {
             const latestPrice =
-              prices[prices.length - 1];
+              tickBuffer.current[
+                tickBuffer.current.length - 1
+              ];
 
             setLastDigit(
               getLastDigit(latestPrice)
             );
           }
+
+          return;
         }
 
         /*
          * LIVE TICK
          */
-
         if (
           data.msg_type === "tick" &&
           data.tick?.quote !== undefined
@@ -86,8 +119,38 @@ export default function Home() {
             data.tick.quote
           );
 
-          setLastDigit(
-            getLastDigit(quote)
+          const newDigit =
+            getLastDigit(quote);
+
+          setLastDigit(newDigit);
+
+          /*
+           * Add the new tick to the rolling
+           * analysis sample.
+           */
+          tickBuffer.current.push(quote);
+
+          /*
+           * Keep ONLY the selected number
+           * of ticks.
+           */
+          if (
+            tickBuffer.current.length >
+            tickLimit
+          ) {
+            tickBuffer.current.shift();
+          }
+
+          /*
+           * Recalculate percentages using
+           * the updated rolling sample.
+           */
+          updateDigitDistribution(
+            tickBuffer.current
+          );
+
+          setTicksAnalyzed(
+            tickBuffer.current.length
           );
         }
 
@@ -117,7 +180,6 @@ export default function Home() {
   /*
    * GET LAST DIGIT
    */
-
   function getLastDigit(
     price: number
   ): number {
@@ -147,7 +209,6 @@ export default function Home() {
   /*
    * CALCULATE DIGIT DISTRIBUTION
    */
-
   function updateDigitDistribution(
     prices: number[]
   ) {
@@ -195,10 +256,7 @@ export default function Home() {
   return (
     <main className="dashboard">
 
-
-      {/* =========================
-          HEADER
-      ========================= */}
+      {/* HEADER */}
 
       <header className="hero">
 
@@ -217,9 +275,7 @@ export default function Home() {
       </header>
 
 
-      {/* =========================
-          MARKET TYPE
-      ========================= */}
+      {/* MARKET TYPE */}
 
       <section className="card market-card">
 
@@ -282,14 +338,9 @@ export default function Home() {
       </section>
 
 
-      {/* =========================
-          DIGIT DISTRIBUTION
-      ========================= */}
+      {/* DIGIT DISTRIBUTION */}
 
       <section className="card digit-card">
-
-
-        {/* HEADER */}
 
         <div className="section-heading">
 
@@ -318,9 +369,7 @@ export default function Home() {
         </div>
 
 
-        {/* =========================
-            TICK SIZE SELECTOR
-        ========================= */}
+        {/* TICK SELECTOR */}
 
         <div className="tick-selector">
 
@@ -367,9 +416,7 @@ export default function Home() {
         </div>
 
 
-        {/* =========================
-            TICK COUNT
-        ========================= */}
+        {/* TICK COUNT */}
 
         <div className="tick-summary">
 
@@ -388,9 +435,7 @@ export default function Home() {
         </div>
 
 
-        {/* =========================
-            DIGIT CIRCLES
-        ========================= */}
+        {/* DIGIT CIRCLES */}
 
         <div className="digit-grid">
 
@@ -427,9 +472,7 @@ export default function Home() {
         </div>
 
 
-        {/* =========================
-            EXPECTED DISTRIBUTION
-        ========================= */}
+        {/* EXPECTED DISTRIBUTION */}
 
         <div className="distribution-info">
 
@@ -446,9 +489,7 @@ export default function Home() {
       </section>
 
 
-      {/* =========================
-          LAST DIGIT
-      ========================= */}
+      {/* LATEST DIGIT */}
 
       <section className="card">
 
@@ -471,9 +512,7 @@ export default function Home() {
       </section>
 
 
-      {/* =========================
-          ANALYSIS
-      ========================= */}
+      {/* ANALYSIS */}
 
       <section className="card">
 
@@ -494,9 +533,7 @@ export default function Home() {
       </section>
 
 
-      {/* =========================
-          PREDICTION
-      ========================= */}
+      {/* PREDICTION */}
 
       <section className="card prediction-card">
 
